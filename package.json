@@ -8,6 +8,10 @@
     "start": "node .",
     "dev": "nodemon"
   },
+  "engines": {
+    "node": ">= 16.0.0",
+    "npm": ">= 7.0.0"
+  },
   "keywords": ["rumble", "m3u8"],
   "author": "Gutemberg Almeida Pinheiro(a.k.a StGuten)",
   "license": "ISC",

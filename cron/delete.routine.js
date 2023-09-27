@@ -2,7 +2,7 @@ import cron from 'node-cron';
 import * as fs from 'fs';
 import path from 'path';
 
-const task = cron.schedule('* * * * *', () => {
+const task = cron.schedule('0 3 * * *', () => {
     const dir = path.resolve(".data/listas/");
     const files = fs.readdirSync(dir);
     for(const file of files){    
