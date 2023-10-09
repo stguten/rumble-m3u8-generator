@@ -9,10 +9,13 @@
     "dev": "nodemon"
   },
   "engines": {
-    "node": ">= 16.0.0",
-    "npm": ">= 7.0.0"
+    "node": "16.x",
+    "npm": "7.x"
   },
-  "keywords": ["rumble", "m3u8"],
+  "keywords": [
+    "rumble",
+    "m3u8"
+  ],
   "author": "Gutemberg Almeida Pinheiro(a.k.a StGuten)",
   "license": "ISC",
   "dependencies": {
@@ -22,7 +25,6 @@
     "cors": "^2.8.5",
     "express": "^4.18.2",
     "helmet": "^7.0.0",
-    "md5": "^2.3.0",
     "node-cron": "^3.0.2"
   }
 }

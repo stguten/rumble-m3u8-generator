@@ -5,7 +5,7 @@ import md5 from "md5";
 import path from 'path';
 
 async function salvarArquivo(lista) {
-  const nomeLista = md5(Math.random().toString()) + ".m3u8";
+  const nomeLista = Date.now() + ".m3u8";
   const localArquivo = path.join(path.resolve(".data/listas/"), nomeLista);
 
   if(lista.length < 0) return false;
