@@ -1,7 +1,6 @@
 import parsing from "../config/cheerio.config.js";
 import axios from 'axios';
 import * as fs from 'fs';
-import md5 from "md5";
 import path from 'path';
 
 async function salvarArquivo(lista) {
