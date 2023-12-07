@@ -31,9 +31,9 @@ async function montarLista(linkCanal, lista) {
       const title = $(element).find("h3.video-item--title").text();
       const link = $(element).find("a.video-item--a").attr("href");
 
-      const videoLink = await axios.get(`https://rumble.com/${link.split("-")[0]}`).data;
+      const videoLink = await axios.get(`https://rumble.com/${link.split("-")[0]}`);
 
-      const linksec = await parsing(videoLink);
+      const linksec = await parsing(videoLink.data);
 
       const codEmbed = linksec('link[type="application/json+oembed"]').attr("href").split("%2F")[4];
 
