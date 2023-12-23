@@ -1,6 +1,6 @@
 import * as cheerio from 'cheerio';
 
-async function parsing (html) {    
+async function parsing (html) {   
     return cheerio.load(html);
 }
 

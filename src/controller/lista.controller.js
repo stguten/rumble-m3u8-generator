@@ -1,6 +1,6 @@
 import parsing from "../config/cheerio.config.js";
-import axios from "axios";
-import * as fs from "fs";
+import http from "../config/axios.config.js";
+import fs from "node:fs";
 import path from "path";
 
 async function salvarArquivo(lista) {
@@ -17,43 +17,68 @@ async function salvarArquivo(lista) {
 }
 
 async function montarLista(linkCanal, lista) {
-  let listSize = [];
+  let listSize = 0;
   let page = 1;
-
+  console.time("Tempo de criação da lista: ");
   do {
-    const html = await axios.get(`${linkCanal}?page=${page++}`);
+    const html = await http.get(`${linkCanal}?page=${page++}`);
     const $ = await parsing(html.data);
-    listSize = $("li.video-listing-entry").length;
+    if($("h1").text() == "404 - Not found") break;
 
-    for (let i = 0; i < $("li.video-listing-entry").length; i++) {
-      let element = $("li.video-listing-entry")[i];
+    const siteconfig = {
+      length: ($("div.thumbnail__grid--item").length > 0 ? $("div.thumbnail__grid--item").length : $("li.video-listing-entry").length),
+      element: ($("div.thumbnail__grid--item").length > 0 ? "div.thumbnail__grid--item" : "li.video-listing-entry"),
+    }
+    
+    listSize = siteconfig.length;
+    
+    for (let i = 0; i < siteconfig.length; i++) {
+      try {        
+        let element = $(siteconfig.element)[i];
+        const linkElement = ($("div.thumbnail__grid--item").length > 0 ? "a.videostream__link" : "a.video-item--a")
+        const link = $(element).find(linkElement).attr("href").trim();
 
-      const title = $(element).find("h3.video-item--title").text();
-      const link = $(element).find("a.video-item--a").attr("href");
+        const videoLink = await http.get(`https://rumble.com${link}`);
+        const linksec = await parsing(videoLink.data);
 
-      const videoLink = await axios.get(`https://rumble.com/${link.split("-")[0]}`);
+        const codEmbed = linksec('link[type="application/json+oembed"]').attr("href").split("%2F")[4];
 
-      const linksec = await parsing(videoLink.data);
+        const mp4 = await http.get(`https://rumble.com/embedJS/u3/?request=video&ver=2&v=${codEmbed}`);
 
-      const codEmbed = linksec('link[type="application/json+oembed"]').attr("href").split("%2F")[4];
+        const title = mp4.data.title;      
+        const linkFinal = mp4.data.ua.mp4[Object.keys(mp4.data.ua.mp4).reverse()[0]].url; //Verificar o porque de estar checando se existe o 720p
 
-      const mp4 = await axios.get(`https://rumble.com/embedJS/u3/?request=video&ver=2&v=${codEmbed}`);
-
-      const linkFinal = mp4.data.u.mp4.url;
-
-      lista.push({
-        titulo: title,
-        dados: `#EXTINF:-1 group-title="${title.split("E")[0].trim()}",${title}\n${linkFinal}\n`,
-      });
+        lista.push({
+          dados: `#EXTINF:-1 group-title="${mp4.data.author.name}",${title}\n${linkFinal}\n`,
+        });      
+      } catch (error) {
+        if (error.response) {
+          // The request was made and the server responded with a status code
+          // that falls out of the range of 2xx
+          console.log(error.response.data);
+          console.log(error.response.status);
+          console.log(error.response.headers);
+        } else if (error.request) {
+          // The request was made but no response was received
+          // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
+          // http.ClientRequest in node.js
+          console.log(error.request);
+        } else {
+          // Something happened in setting up the request that triggered an Error
+          console.log('Error', error.message);
+        }
+        console.log(error.config);
+      }
     }
   } while (listSize >= 25);
 
   const nomeLista = await salvarArquivo(lista);
+  console.timeEnd("Tempo de criação da lista: ");
   return { link: `/lista/${nomeLista}` };
 }
 
 async function verificarLink(url) {
-  if (url.toLowerCase().includes("https://rumble.com/c")) {
+  if (url.toLowerCase().includes("https://rumble.com/c" ) || url.toLowerCase().includes("https://rumble.com/user")) {
     return true;
   } else {
     return false;
@@ -67,14 +92,7 @@ async function gerarLista(req, res) {
     return;
   }
 
-  res
-    .status(200)
-    .send(
-      await montarLista(
-        channelUrl.includes("?page=") ? channelUrl.split("?")[0] : channelUrl,
-        []
-      )
-    );
+   res.status(200).send(await montarLista(channelUrl.includes("?page=") ? channelUrl.split("?")[0] : channelUrl, [])); 
 }
 
 async function baixarlista(req, res) {
@@ -88,10 +106,7 @@ async function baixarlista(req, res) {
       "x-sent": "true",
     },
   };
-  res.sendFile(fileName, options, (err) => {
-    if (err) {
-      res.status(404).send("Arquivo não encontrado!");
-    }
-  });
+  res.sendFile(fileName, options, err => err ? res.status(404).send("Arquivo não encontrado!") : "" );
 }
+
 export { gerarLista, baixarlista };
