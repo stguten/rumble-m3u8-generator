@@ -5,7 +5,7 @@ import { baixarlista, gerarLista } from "./controller/lista.controller.js";
 
 const publicDir = path.join(process.cwd(), "public");
 
-app.use("/gerar-lista",gerarLista);
+app.use("/gerar-lista", gerarLista);
 app.use("/lista/:name", baixarlista);
 app.use("/", express.static(publicDir));
 
